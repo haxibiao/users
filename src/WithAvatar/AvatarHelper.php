@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Storage;
 trait AvatarHelper
 {
 
+    protected $avatarField = 'avatar';
+    protected $qqField     = 'qq';
+
     /**
      * 保存头像
      * 可接受参数：
@@ -15,7 +18,7 @@ trait AvatarHelper
      * base64图像
      * UploadedFile 上传的图像对象
      */
-    public function saveAvatar($avatar, $extension = 'jpeg')
+    public function saveAvatar($avatar, $extension = 'jpeg', $fileTemplate = 'avatar-%s.%s', $storePrefix = '/storage/app/avatars/')
     {
         if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $avatar, $res)) {
             $extension     = $res[2];
@@ -28,11 +31,10 @@ trait AvatarHelper
             $imageStream = file_get_contents($avatar);
         }
 
-        $avatarPath  = sprintf('/storage/app/avatars/avatar-%s.%s', $this->id, $extension);
+        $avatarPath  = sprintf($storePrefix . $fileTemplate, $this->id, $extension);
         $storeStatus = self::UploadAvatar($avatarPath, $imageStream);
         if ($storeStatus) {
             $this->avatar = $avatarPath;
-            $this->save();
         }
         return $this;
     }
@@ -50,15 +52,15 @@ trait AvatarHelper
      */
     public function getAvatarUrlAttribute()
     {
-        return $this->attributes['avatar'] ? $this->getAvatarLink() : url(self::getDefaultAvatar());
+        return $this->attributes[$this->avatarField] ? $this->getAvatarLink() : url(self::getDefaultAvatar());
     }
 
     /**
      * 获取头像链接
      */
-    public function getAvatarLink(string $avatarField = 'avatar', bool $AbsPath = true, $jumpCDNCache = false)
+    public function getAvatarLink(bool $AbsPath = true, $jumpCDNCache = false)
     {
-        $avatar = $this->$avatarField;
+        $avatar = $this->avatarField;
         if ($jumpCDNCache) {
             $avatar = $avatar . '?t=' . now()->timestamp;
         }
@@ -67,9 +69,18 @@ trait AvatarHelper
 
     /**
      * 获取默认头像相对路径
+     * TODO: 从images.haxibiao.com 获取默认头像数据
      */
     public static function getDefaultAvatar()
     {
         return '/images/avatars/avatar-' . rand(1, 20) . '.png';
+    }
+
+    /**
+     * 获取QQ头像
+     */
+    public function getQQAvatarAttribute(): string
+    {
+        return 'http://q1.qlogo.cn/g?b=qq&nk=' . $this->qqField . '&s=100&t=' . time();
     }
 }
