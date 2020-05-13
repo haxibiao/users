@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\Storage;
 trait AvatarHelper
 {
 
-    protected $avatarField = 'avatar';
-    protected $qqField     = 'qq';
-
     /**
      * 保存头像
      * 可接受参数：
@@ -18,7 +15,7 @@ trait AvatarHelper
      * base64图像
      * UploadedFile 上传的图像对象
      */
-    public function saveAvatar($avatar, $extension = 'jpeg', $fileTemplate = 'avatar-%s.%s', $storePrefix = '/storage/app/avatars/')
+    public static function saveAvatar($user, $avatar, $extension = 'jpeg', $fileTemplate = 'avatar-%s.%s', $storePrefix = '/storage/app/avatars/', $avatarField)
     {
         if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $avatar, $res)) {
             $extension     = $res[2];
@@ -31,12 +28,14 @@ trait AvatarHelper
             $imageStream = file_get_contents($avatar);
         }
 
-        $avatarPath  = sprintf($storePrefix . $fileTemplate, $this->id, $extension);
+        $avatarPath  = sprintf($storePrefix . $fileTemplate, $user->id, $extension);
         $storeStatus = self::UploadAvatar($avatarPath, $imageStream);
         if ($storeStatus) {
-            $this->avatar = $avatarPath;
+            $user::update([
+                $avatarField => $avatarPath,
+            ]);
         }
-        return $this;
+        return $user;
     }
 
     /**
@@ -52,7 +51,7 @@ trait AvatarHelper
      */
     public function getAvatarUrlAttribute()
     {
-        return $this->attributes[$this->avatarField] ? $this->getAvatarLink() : url(self::getDefaultAvatar());
+        return $this->attributes['avatar'] ? $this->getAvatarLink() : url(self::getDefaultAvatar());
     }
 
     /**
@@ -60,7 +59,7 @@ trait AvatarHelper
      */
     public function getAvatarLink(bool $AbsPath = true, $jumpCDNCache = false)
     {
-        $avatar = $this->avatarField;
+        $avatar = 'avatar';
         if ($jumpCDNCache) {
             $avatar = $avatar . '?t=' . now()->timestamp;
         }
@@ -81,6 +80,6 @@ trait AvatarHelper
      */
     public function getQQAvatarAttribute(): string
     {
-        return 'http://q1.qlogo.cn/g?b=qq&nk=' . $this->qqField . '&s=100&t=' . time();
+        return 'http://q1.qlogo.cn/g?b=qq&nk=' . $this->qq . '&s=100&t=' . time();
     }
 }
