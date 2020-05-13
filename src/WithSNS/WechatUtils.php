@@ -25,11 +25,11 @@ class WechatUtils
      * @param [String] $code
      * @return Array
      */
-    public static function accessToken($code, $client): ?array
+    public static function accessToken($code): ?array
     {
         $accessTokenUrl = 'https://api.weixin.qq.com/sns/oauth2/access_token';
 
-        $response = $client->request('GET', $accessTokenUrl, [
+        $response = app('client')->request('GET', $accessTokenUrl, [
             'query' => [
                 'grant_type' => 'authorization_code',
                 'code'       => $code,

@@ -63,7 +63,7 @@ trait AvatarHelper
         if ($jumpCDNCache) {
             $avatar = $avatar . '?t=' . now()->timestamp;
         }
-        return $AbsPath ? Storage::cloud()->url($avatar) : $avatar;
+        return $AbsPath ? Storage::cloud()->url($this->$avatar) : $avatar;
     }
 
     /**
